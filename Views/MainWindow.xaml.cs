@@ -99,15 +99,31 @@ namespace Textract
             var cropped = new CroppedBitmap(source, selection);
 
             // OCR
-            using var ocrService = new OcrService(@"./tessdata");
-            string text = ocrService.OCRProcess(cropped).Trim();
+            using var ocrService = new OcrService(@"./tessdata", "jpn+eng");
+            string text = ocrService.OCRProcess(cropped);
 
-            if (LANGUAGE.Contains("jpn"))
-            {
-                text = text.Replace(" ", "");
-            }
+            OcrResultTxtBox.AppendText(text + "\r\n" + "-----------------------------" + "\r\n");
+        }
 
-            OcrResultTxtBox.AppendText(text+"\r\n");
+        private void FitImageToScrollViewer()
+        {
+            if (MainImage.Source is not BitmapSource bmp) return;
+
+            double imageWidth = bmp.PixelWidth;
+            double imageHeight = bmp.PixelHeight;
+
+            double viewportWidth = ImageScrollViewer.ViewportWidth;
+            double viewportHeight = ImageScrollViewer.ViewportHeight;
+
+            // 스크롤뷰어와 이미지의 비율 비교
+            double widthRatio = viewportWidth / imageWidth;
+            double heightRatio = viewportHeight / imageHeight;
+
+            double scale = Math.Min(widthRatio, heightRatio); // 더 작은 쪽 기준으로 맞추기
+
+            // 실제 적용할 너비/높이 계산
+            MainImage.Width = imageWidth * scale;
+            MainImage.Height = imageHeight * scale;
         }
 
         private void LoadImage_Click(object sender, RoutedEventArgs e)
@@ -115,12 +131,14 @@ namespace Textract
             OpenFileDialog ofd = new OpenFileDialog
             {
                 Title = "이미지 선택",
-                Filter = "Image Files (*.png;*jpg;*.jpeg;*bmp)|*.png;*jpg;*.jpeg;*bmp"
+                Filter = "Image Files (*.png;*jpg;*.jpeg;*bmp)|*.png;*jpg;*.jpeg;*bmp",
+                Multiselect = true
             };
 
             if (ofd.ShowDialog() == true)
             {
                 MainImage.Source = new BitmapImage(new Uri(ofd.FileName));
+                FitImageToScrollViewer();
 
                 // 선택 영역 초기화
                 SelectionRect.Visibility = Visibility.Collapsed;
@@ -156,6 +174,51 @@ namespace Textract
             Canvas.SetTop(SelectionRect, y);
             SelectionRect.Width = w;
             SelectionRect.Height = h;
+        }
+
+        private void ImageListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+
+        }
+
+        private double _zoom = 1.0;
+        private const double ZoomStep = 0.1;
+        private const double ZoomMin = 0.5;
+        private const double ZoomMax = 5.0;
+
+        private void ZoomIn()
+        {
+            _zoom = Math.Min(_zoom + ZoomStep, ZoomMax);
+            ZoomTransform.ScaleX = _zoom;
+            ZoomTransform.ScaleY = _zoom;
+        }
+
+        private void ZoomOut()
+        {
+            _zoom = Math.Max(_zoom - ZoomStep, ZoomMin);
+            ZoomTransform.ScaleX = _zoom;
+            ZoomTransform.ScaleY = _zoom;
+        }
+
+        private void OverlayCanvas_MouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
+            {
+                if (e.Delta > 0)
+                {
+                    ZoomIn();
+                }
+                else
+                {
+                    ZoomOut();
+                }
+
+                e.Handled = true;   // 스크롤 막고 줌만 실행
+            }
+            else
+            {
+                e.Handled = false;  // Ctrl 없으면 스크롤 동작 유지
+            }
         }
     }
 }

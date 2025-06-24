@@ -15,10 +15,11 @@ namespace Textract.Services
     public class OcrService:IDisposable
     {
         private readonly TesseractEngine _engine;
-        private string LANGUAGE = "jpn+eng";
+        private string language;
 
         public OcrService(string tessDataPath, string language = "jpn")
         {
+            this.language = language;
             _engine = new TesseractEngine(tessDataPath, language, EngineMode.Default);
         }
 
@@ -26,7 +27,7 @@ namespace Textract.Services
         {
             try
             {
-                // 전처리
+                // 이진화 
                 Mat mat = BitmapSourceConverter.ToMat(bitmap);
                 Mat gray = new Mat();
                 Mat binary = new Mat();
@@ -36,9 +37,9 @@ namespace Textract.Services
 
                 // 확대 (옵션)
                 Mat resized = new Mat();
-                Cv2.Resize(binary, resized, new OpenCvSharp.Size(), 2, 2, InterpolationFlags.Linear);
+                Cv2.Resize(binary, resized, new OpenCvSharp.Size(), 2, 2);
 
-                BitmapSource binaryBitmap = OpenCvSharp.WpfExtensions.BitmapSourceConverter.ToBitmapSource(resized);
+                BitmapSource binaryBitmap = BitmapSourceConverter.ToBitmapSource(resized);
 
                 using var ms = new MemoryStream();
                 var encoder = new PngBitmapEncoder();
@@ -49,7 +50,13 @@ namespace Textract.Services
 
                 using var page = _engine.Process(img, PageSegMode.SingleBlock);
 
-                string text = page.GetText();
+                string text = page.GetText().Trim();
+
+                if (language.Contains("jpn"))
+                {
+                    text = text.Replace(" ", "");
+                }
+
                 return string.IsNullOrWhiteSpace(text) ? "인식된 텍스트 없음" : text;
             }
             catch (Exception e)
