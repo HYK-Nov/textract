@@ -32,6 +32,9 @@ namespace Textract
         private System.Windows.Point _startPoint;
         private bool _isDragging = false;
 
+        public static RoutedUICommand LoadImageCommand = new RoutedUICommand(
+            "Load Image", "LoadImage", typeof(MainWindow));
+
         public MainWindow()
         {
             InitializeComponent();
@@ -147,6 +150,11 @@ namespace Textract
             }
         }
 
+        private void LoadImage_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+            LoadImage_Click(sender, e); // 기존 이미지 불러오기 재사용
+        }
+
         private void OverlayCanvas_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             _startPoint = e.GetPosition(OverlayCanvas);
@@ -202,7 +210,7 @@ namespace Textract
 
         private void OverlayCanvas_MouseWheel(object sender, MouseWheelEventArgs e)
         {
-            if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
+            if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
             {
                 if (e.Delta > 0)
                 {
@@ -219,6 +227,11 @@ namespace Textract
             {
                 e.Handled = false;  // Ctrl 없으면 스크롤 동작 유지
             }
+        }
+
+        private void Exit_Click(object sender, RoutedEventArgs e)
+        {
+            System.Windows.Application.Current.Shutdown();
         }
     }
 }

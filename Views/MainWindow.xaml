@@ -6,65 +6,100 @@
         xmlns:local="clr-namespace:Textract"
         mc:Ignorable="d"
         Title="Textract" Height="450" Width="800" WindowState="Maximized" WindowStartupLocation="CenterScreen">
-    <Grid Margin="10">
-        <Grid.ColumnDefinitions>
-            <!-- 이미지 리스트 -->
-            <ColumnDefinition Width="10*"/>
-            <!-- 미리보기 + OCR -->
-            <ColumnDefinition Width="90*"/>
-        </Grid.ColumnDefinitions>
 
-        <!-- 왼쪽: 이미지 목록 -->
-        <ListBox x:Name="ImageListBox"
-                 DisplayMemberPath="Name"
-                 SelectionChanged="ImageListBox_SelectionChanged"/>
-        <!-- 오른쪽 -->
-        <Grid Grid.Column="1" >
+    <!-- 단축키 -->
+    <Window.InputBindings>
+        <KeyBinding Key="O" 
+                    Modifiers="Control" 
+                    Command="{x:Static local:MainWindow.LoadImageCommand}"/>
+    </Window.InputBindings>
+    <Window.CommandBindings>
+        <CommandBinding Command="{x:Static local:MainWindow.LoadImageCommand}"
+                        Executed="LoadImage_Executed"/>
+    </Window.CommandBindings>
+
+    <!-- UI -->
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Menu Grid.Row="0">
+            <MenuItem Header="파일">
+                <MenuItem Header="이미지 불러오기" 
+                          Click="LoadImage_Click"
+                          InputGestureText="Ctrl+O"/>
+                <Separator/>
+                <MenuItem Header="종료"
+                          Click="Exit_Click"
+                          InputGestureText="Alt+F4"/>
+            </MenuItem>
+            <MenuItem Header="설정">
+                <MenuItem Header="언어 변경"/>
+            </MenuItem>
+        </Menu>
+
+
+        <Grid Grid.Row="1"
+              Margin="10">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="80*"/>
-                <ColumnDefinition Width="20*"/>
+                <!-- 이미지 리스트 -->
+                <ColumnDefinition Width="10*"/>
+                <!-- 미리보기 + OCR -->
+                <ColumnDefinition Width="90*"/>
             </Grid.ColumnDefinitions>
 
-            <ScrollViewer x:Name="ImageScrollViewer"
-                HorizontalScrollBarVisibility="Auto"
-                          VerticalScrollBarVisibility="Auto">
-                <Grid>
-                    <Grid.LayoutTransform>
-                        <ScaleTransform x:Name="ZoomTransform" ScaleX="1" ScaleY="1"/>
-                    </Grid.LayoutTransform>
+            <!-- 왼쪽: 이미지 목록 -->
+            <ListBox x:Name="ImageListBox"
+                     DisplayMemberPath="Name"
+                     SelectionChanged="ImageListBox_SelectionChanged"/>
+            <!-- 오른쪽 -->
+            <Grid Grid.Column="1" >
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="80*"/>
+                    <ColumnDefinition Width="20*"/>
+                </Grid.ColumnDefinitions>
 
-                    <!-- 이미지 -->
-                    <Image x:Name="MainImage"
-                           Stretch="Uniform"/>
-                    <!-- 오버레이 -->
-                    <Canvas x:Name="OverlayCanvas"
-                            Background="Transparent"
-                            MouseLeftButtonDown="OverlayCanvas_MouseLeftButtonDown"
-                            MouseMove="OverlayCanvas_MouseMove"
-                            MouseLeftButtonUp="OverlayCanvas_MouseLeftButtonUp" MouseWheel="OverlayCanvas_MouseWheel">
-                        <Rectangle x:Name="SelectionRect"
-                                   Stroke="Red"
-                                   StrokeThickness="2"
-                                   Fill="#40FF0000"
-                                   Visibility="Collapsed"/>
-                    </Canvas>
-                </Grid>
-            </ScrollViewer>
+                <ScrollViewer x:Name="ImageScrollViewer"
+                              Margin="10, 0"
+                              HorizontalScrollBarVisibility="Auto"
+                              VerticalScrollBarVisibility="Auto">
+                    <Grid>
+                        <Grid.LayoutTransform>
+                            <ScaleTransform x:Name="ZoomTransform" ScaleX="1" ScaleY="1"/>
+                        </Grid.LayoutTransform>
 
-            <Grid Grid.Column="1">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
+                        <!-- 이미지 -->
+                        <Image x:Name="MainImage"
+                               Stretch="Uniform"/>
+                        <!-- 오버레이 -->
+                        <Canvas x:Name="OverlayCanvas"
+                                Background="Transparent"
+                                MouseLeftButtonDown="OverlayCanvas_MouseLeftButtonDown"
+                                MouseMove="OverlayCanvas_MouseMove"
+                                MouseLeftButtonUp="OverlayCanvas_MouseLeftButtonUp" MouseWheel="OverlayCanvas_MouseWheel">
+                            <Rectangle x:Name="SelectionRect"
+                                       Stroke="Red"
+                                       StrokeThickness="2"
+                                       Fill="#40FF0000"
+                                       Visibility="Collapsed"/>
+                        </Canvas>
+                    </Grid>
+                </ScrollViewer>
 
-                <TextBox Grid.Row="0"
-                         x:Name="OcrResultTxtBox" Margin="0,0,0,7"  />
-                <StackPanel Grid.Row="1">
-                    <Button Height="40"
-                            Content="이미지 불러오기" Click="LoadImage_Click" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Margin="0,0,0,10"/>
-                    <Button Height="40"
+                <Grid Grid.Column="1">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBox Grid.Row="0"
+                             x:Name="OcrResultTxtBox" Margin="0,0,0,7"  />
+                    <Button Grid.Row="1"
+                            Height="40"
                             Content="OCR 실행" Click="RunOcr_Click" HorizontalAlignment="Stretch" VerticalAlignment="Bottom"/>
-                </StackPanel>
+                </Grid>
             </Grid>
         </Grid>
     </Grid>
