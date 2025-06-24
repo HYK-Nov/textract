@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Textract"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="450" Width="800" WindowState="Maximized" WindowStartupLocation="CenterScreen">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -19,12 +19,12 @@
 
         <Grid Grid.Row="1" Margin="10,0,10,10">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="60*"/>
+                <ColumnDefinition Width="70*"/>
                 <ColumnDefinition Width="1*"/>
-                <ColumnDefinition Width="39*"/>
+                <ColumnDefinition Width="29*"/>
             </Grid.ColumnDefinitions>
 
-            <Grid  x:Name="ImageContainer">
+            <Grid Grid.Column="0"  x:Name="ImageContainer">
                 <Image x:Name="MainImage"
                        Stretch="Uniform"
                        HorizontalAlignment="Stretch"
@@ -42,6 +42,7 @@
                                Visibility="Collapsed"/>
                 </Canvas>
             </Grid>
+            <TextBox x:Name="OcrResultTxtBox" Grid.Column="2"/>
         </Grid>
     </Grid>
 </Window>
