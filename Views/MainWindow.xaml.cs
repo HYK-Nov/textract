@@ -1,6 +1,7 @@
 ﻿using Microsoft.Win32;
 using OpenCvSharp;
 using OpenCvSharp.WpfExtensions;
+using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -27,10 +28,12 @@ namespace Textract
     /// </summary>
     public partial class MainWindow : System.Windows.Window
     {
-        private string LANGUAGE = "jpn+eng";
+        private string LANGUAGE;
 
         private System.Windows.Point _startPoint;
-        private bool _isDragging = false;
+        private bool _isDragging;
+        private readonly ZoomService _zoomService;
+        private SelectionService _selectionService;
 
         public static RoutedUICommand LoadImageCommand = new RoutedUICommand(
             "Load Image", "LoadImage", typeof(MainWindow));
@@ -38,6 +41,11 @@ namespace Textract
         public MainWindow()
         {
             InitializeComponent();
+            _isDragging = false;
+            LANGUAGE = "kor+eng";
+
+            _zoomService = new ZoomService(ZoomTransform);
+            _selectionService = new SelectionService(SelectionRect, _zoomService.Zoom);
         }
 
         private Int32Rect GetSelectedImageRegion(BitmapSource source)
@@ -106,6 +114,8 @@ namespace Textract
             string text = ocrService.OCRProcess(cropped);
 
             OcrResultTxtBox.AppendText(text + "\r\n" + "-----------------------------" + "\r\n");
+
+            OcrResultTxtBox.ScrollToEnd();
         }
 
         private void FitImageToScrollViewer()
@@ -147,6 +157,9 @@ namespace Textract
                 SelectionRect.Visibility = Visibility.Collapsed;
                 SelectionRect.Width = 0;
                 SelectionRect.Height = 0;
+
+                // Zoom 초기화
+                _zoomService.ResetZoom();
             }
         }
 
@@ -157,9 +170,10 @@ namespace Textract
 
         private void OverlayCanvas_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            _startPoint = e.GetPosition(OverlayCanvas);
             _isDragging = true;
-            SelectionRect.Visibility = Visibility.Visible;
+
+            var pos = e.GetPosition(OverlayCanvas);
+            _selectionService.Start(pos);
         }
 
         private void OverlayCanvas_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
@@ -172,16 +186,7 @@ namespace Textract
             if (!_isDragging) return;
 
             var pos = e.GetPosition(OverlayCanvas);
-
-            double x = Math.Min(pos.X, _startPoint.X);
-            double y = Math.Min(pos.Y, _startPoint.Y);
-            double w = Math.Abs(pos.X - _startPoint.X);
-            double h = Math.Abs(pos.Y - _startPoint.Y);
-
-            Canvas.SetLeft(SelectionRect, x);
-            Canvas.SetTop(SelectionRect, y);
-            SelectionRect.Width = w;
-            SelectionRect.Height = h;
+            _selectionService.Update(pos);
         }
 
         private void ImageListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -189,37 +194,12 @@ namespace Textract
 
         }
 
-        private double _zoom = 1.0;
-        private const double ZoomStep = 0.1;
-        private const double ZoomMin = 0.5;
-        private const double ZoomMax = 5.0;
-
-        private void ZoomIn()
-        {
-            _zoom = Math.Min(_zoom + ZoomStep, ZoomMax);
-            ZoomTransform.ScaleX = _zoom;
-            ZoomTransform.ScaleY = _zoom;
-        }
-
-        private void ZoomOut()
-        {
-            _zoom = Math.Max(_zoom - ZoomStep, ZoomMin);
-            ZoomTransform.ScaleX = _zoom;
-            ZoomTransform.ScaleY = _zoom;
-        }
-
         private void OverlayCanvas_MouseWheel(object sender, MouseWheelEventArgs e)
         {
             if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
             {
-                if (e.Delta > 0)
-                {
-                    ZoomIn();
-                }
-                else
-                {
-                    ZoomOut();
-                }
+                if (e.Delta > 0) _zoomService.ZoomIn();
+                else _zoomService.ZoomOut();
 
                 e.Handled = true;   // 스크롤 막고 줌만 실행
             }
@@ -233,5 +213,7 @@ namespace Textract
         {
             System.Windows.Application.Current.Shutdown();
         }
+
+       
     }
 }

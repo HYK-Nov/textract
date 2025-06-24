@@ -95,7 +95,9 @@
                     </Grid.RowDefinitions>
 
                     <TextBox Grid.Row="0"
-                             x:Name="OcrResultTxtBox" Margin="0,0,0,7"  />
+                             HorizontalScrollBarVisibility="Auto"
+                             VerticalScrollBarVisibility="Auto"
+                             x:Name="OcrResultTxtBox" Margin="0,0,0,7"/>
                     <Button Grid.Row="1"
                             Height="40"
                             Content="OCR 실행" Click="RunOcr_Click" HorizontalAlignment="Stretch" VerticalAlignment="Bottom"/>
