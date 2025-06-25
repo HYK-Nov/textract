@@ -14,7 +14,7 @@ namespace Textract.Services
     public class SelectionService
     {
         private Point _startPoint;
-        private readonly System.Windows.Shapes.Rectangle _rect;
+        private readonly Rectangle _rect;
         private readonly double _zoom;
 
         public SelectionService(Rectangle selectionRect, double zoom)
@@ -25,7 +25,7 @@ namespace Textract.Services
 
         public void Start(Point pos)
         {
-            _startPoint = new System.Windows.Point(pos.X / _zoom, pos.Y / _zoom);
+            _startPoint = new Point(pos.X / _zoom, pos.Y / _zoom);
             _rect.Visibility = Visibility.Visible;
         }
 
@@ -51,6 +51,7 @@ namespace Textract.Services
         public void Stop()
         {
             // TODO: 선택 해제 기능
+
         }
     }
 }

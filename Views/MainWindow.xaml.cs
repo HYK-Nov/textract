@@ -93,8 +93,6 @@ namespace Textract
             if (rectW <= 0) rectW = 1;
             if (rectH <= 0) rectH = 1;
 
-            Debug.WriteLine($"Image: {source.PixelWidth}x{source.PixelHeight}, Rect: {rectX},{rectY},{rectW},{rectH}");
-
             return new Int32Rect(rectX, rectY, rectW, rectH);
         }
 
@@ -213,7 +211,5 @@ namespace Textract
         {
             System.Windows.Application.Current.Shutdown();
         }
-
-       
     }
 }
