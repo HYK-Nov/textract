@@ -28,21 +28,19 @@ namespace Textract
     /// </summary>
     public partial class MainWindow : System.Windows.Window
     {
-        private string LANGUAGE;
-
         private System.Windows.Point _startPoint;
         private bool _isDragging;
         private readonly ZoomService _zoomService;
         private SelectionService _selectionService;
+        private readonly OcrService ocrService = new OcrService(@"./tessdata");
 
-        public static RoutedUICommand LoadImageCommand = new RoutedUICommand(
+    public static RoutedUICommand LoadImageCommand = new RoutedUICommand(
             "Load Image", "LoadImage", typeof(MainWindow));
 
         public MainWindow()
         {
             InitializeComponent();
             _isDragging = false;
-            LANGUAGE = "kor+eng";
 
             _zoomService = new ZoomService(ZoomTransform);
             _selectionService = new SelectionService(SelectionRect, _zoomService.Zoom);
@@ -104,16 +102,20 @@ namespace Textract
             var selection = GetSelectedImageRegion(source);
             if (selection.Width <= 0 || selection.Height <= 0) return;
 
+            OcrProgressBar.IsIndeterminate = true;
+
             // 선택 영역만 잘라내기
             var cropped = new CroppedBitmap(source, selection);
 
             // OCR
-            using var ocrService = new OcrService(@"./tessdata", "jpn+eng");
+            
             string text = ocrService.OCRProcess(cropped);
 
             OcrResultTxtBox.AppendText(text + "\r\n" + "-----------------------------" + "\r\n");
 
             OcrResultTxtBox.ScrollToEnd();
+
+            OcrProgressBar.IsIndeterminate = false;
         }
 
         private void FitImageToScrollViewer()
@@ -148,7 +150,15 @@ namespace Textract
 
             if (ofd.ShowDialog() == true)
             {
-                MainImage.Source = new BitmapImage(new Uri(ofd.FileName));
+                var files = ofd.FileNames;
+
+                ImageListBox.Items.Clear();
+                foreach (var file in files)
+                {
+                    ImageListBox.Items.Add(new FileInfo(file));
+                }
+
+                MainImage.Source = new BitmapImage(new Uri(files[0]));
                 FitImageToScrollViewer();
 
                 // 선택 영역 초기화
@@ -210,6 +220,25 @@ namespace Textract
         private void Exit_Click(object sender, RoutedEventArgs e)
         {
             System.Windows.Application.Current.Shutdown();
+        }
+
+        private void LanguageMenuItem_Checked(object sender, RoutedEventArgs e)
+        {
+            var clicked = (MenuItem)sender;
+            var parent = (MenuItem)clicked.Parent;
+
+            foreach (object obj in parent.Items)
+            {
+                if (obj is MenuItem mi && mi != clicked)
+                {
+                    mi.IsChecked = false;
+                }
+            }
+
+            if (clicked.Tag is string lang)
+            {
+                ocrService.ChangeLanguage(lang);
+            }
         }
     }
 }

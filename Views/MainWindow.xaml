@@ -32,11 +32,14 @@
                           InputGestureText="Ctrl+O"/>
                 <Separator/>
                 <MenuItem Header="종료"
-                          Click="Exit_Click"
-                          InputGestureText="Alt+F4"/>
+                          Click="Exit_Click"/>
             </MenuItem>
-            <MenuItem Header="설정">
-                <MenuItem Header="언어 변경"/>
+            <MenuItem Header="도구">
+                <MenuItem Header="언어 변경">
+                    <MenuItem Header="kor" Tag="kor+eng" IsCheckable="True" IsChecked="True" Checked="LanguageMenuItem_Checked"/>
+                    <MenuItem Header="jpn" Tag="jpn+eng" IsCheckable="True" IsChecked="False" Checked="LanguageMenuItem_Checked"/>
+                    <MenuItem Header="eng" Tag="eng" IsCheckable="True" IsChecked="False" Checked="LanguageMenuItem_Checked"/>
+                </MenuItem>
             </MenuItem>
         </Menu>
 
@@ -54,6 +57,7 @@
             <ListBox x:Name="ImageListBox"
                      DisplayMemberPath="Name"
                      SelectionChanged="ImageListBox_SelectionChanged"/>
+
             <!-- 오른쪽 -->
             <Grid Grid.Column="1" >
                 <Grid.ColumnDefinitions>
@@ -92,13 +96,19 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*"/>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
                     <TextBox Grid.Row="0"
                              HorizontalScrollBarVisibility="Auto"
                              VerticalScrollBarVisibility="Auto"
-                             x:Name="OcrResultTxtBox" Margin="0,0,0,7"/>
-                    <Button Grid.Row="1"
+                             x:Name="OcrResultTxtBox"/>
+                    <ProgressBar Grid.Row="1"
+                                 x:Name="OcrProgressBar"
+                                 Height="15"
+                                 Margin="0,5"
+                                 HorizontalAlignment="Stretch"/>
+                    <Button Grid.Row="2"
                             Height="40"
                             Content="OCR 실행" Click="RunOcr_Click" HorizontalAlignment="Stretch" VerticalAlignment="Bottom"/>
                 </Grid>

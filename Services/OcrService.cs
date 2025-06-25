@@ -14,13 +14,25 @@ namespace Textract.Services
 {
     public class OcrService:IDisposable
     {
-        private readonly TesseractEngine _engine;
+        private TesseractEngine _engine;
         private string language;
+        private string tessDataPath;
 
-        public OcrService(string tessDataPath, string language = "jpn")
+        public OcrService(string tessDataPath, string language = "kor+eng")
         {
             this.language = language;
+            this.tessDataPath = tessDataPath;
             _engine = new TesseractEngine(tessDataPath, language, EngineMode.Default);
+        }
+
+        public void ChangeLanguage(string language)
+        {
+            this.language = language;
+
+            _engine?.Dispose();
+            _engine = new TesseractEngine(tessDataPath, language, EngineMode.Default);
+
+            System.Diagnostics.Debug.WriteLine($"[OCR] 언어 변경됨: {language}");
         }
 
         public string OCRProcess(BitmapSource bitmap)
