@@ -48,6 +48,13 @@ namespace Textract.Services
             _rect.Height = h * _zoom;
         }
 
+        public void Reset()
+        {
+            _rect.Visibility = Visibility.Collapsed;
+            _rect.Width = 0;
+            _rect.Height = 0;
+        }
+
         public void Stop()
         {
             // TODO: 선택 해제 기능

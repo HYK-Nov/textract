@@ -18,6 +18,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Xps.Packaging;
 using Tesseract;
+using Textract.Models;
 using Textract.Services;
 using static System.Net.Mime.MediaTypeNames;
 
@@ -150,21 +151,22 @@ namespace Textract
 
             if (ofd.ShowDialog() == true)
             {
-                var files = ofd.FileNames;
+                var items = new List<ImageItem>();
 
-                ImageListBox.Items.Clear();
-                foreach (var file in files)
+                int index = 1;
+
+                foreach (var path in ofd.FileNames)
                 {
-                    ImageListBox.Items.Add(new FileInfo(file));
+                    items.Add(new ImageItem(path, index++));
                 }
 
-                MainImage.Source = new BitmapImage(new Uri(files[0]));
+                ImageListBox.ItemsSource = items;
+
+                MainImage.Source = items[0].Thumbnail;
                 FitImageToScrollViewer();
 
                 // 선택 영역 초기화
-                SelectionRect.Visibility = Visibility.Collapsed;
-                SelectionRect.Width = 0;
-                SelectionRect.Height = 0;
+                _selectionService.Reset();
 
                 // Zoom 초기화
                 _zoomService.ResetZoom();
@@ -199,7 +201,18 @@ namespace Textract
 
         private void ImageListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            if (ImageListBox.SelectedItem is ImageItem item)
+            {
+                var image = new BitmapImage(new Uri(item.Path));
+                MainImage.Source = image;
+                FitImageToScrollViewer();
 
+                // 선택 영역 초기화
+                _selectionService.Reset();
+
+                // Zoom 초기화
+                _zoomService.ResetZoom();
+            }
         }
 
         private void OverlayCanvas_MouseWheel(object sender, MouseWheelEventArgs e)
