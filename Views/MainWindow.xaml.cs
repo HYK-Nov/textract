@@ -34,7 +34,9 @@ namespace Textract
         private bool _isDragging;
         private readonly ZoomService _zoomService;
         private SelectionService _selectionService;
-        private readonly OcrService ocrService = new OcrService(@"./tessdata");
+        private readonly OcrService _ocrService = new OcrService(@"./tessdata");
+        private ImageViewerService _imageViewerService;
+        private ObservableCollection<OcrResult> ocrResults = new();
 
         public static RoutedUICommand LoadImageCommand = new RoutedUICommand(
             "Load Image", "LoadImage", typeof(MainWindow));
@@ -46,6 +48,9 @@ namespace Textract
 
             _zoomService = new ZoomService(ZoomTransform);
             _selectionService = new SelectionService(SelectionRect, _zoomService.Zoom);
+            _imageViewerService = new ImageViewerService(MainImage, ImageScrollViewer, _selectionService, _zoomService);
+
+            OCRResultDataGrid.ItemsSource = ocrResults;
         }
 
         private Int32Rect GetSelectedImageRegion(BitmapSource source)
@@ -104,39 +109,15 @@ namespace Textract
             var selection = GetSelectedImageRegion(source);
             if (selection.Width <= 0 || selection.Height <= 0) return;
 
-            OcrProgressBar.IsIndeterminate = true;
-
             // 선택 영역만 잘라내기
             var cropped = new CroppedBitmap(source, selection);
 
             // OCR
-            
-            string text = ocrService.OCRProcess(cropped);
+            string text = _ocrService.OCRProcess(cropped);
 
-            OCRResultDataGrid.Items.Add(new OcrResult{Text = text});
-
-            OcrProgressBar.IsIndeterminate = false;
-        }
-
-        private void FitImageToScrollViewer()
-        {
-            if (MainImage.Source is not BitmapSource bmp) return;
-
-            double imageWidth = bmp.PixelWidth;
-            double imageHeight = bmp.PixelHeight;
-
-            double viewportWidth = ImageScrollViewer.ViewportWidth;
-            double viewportHeight = ImageScrollViewer.ViewportHeight;
-
-            // 스크롤뷰어와 이미지의 비율 비교
-            double widthRatio = viewportWidth / imageWidth;
-            double heightRatio = viewportHeight / imageHeight;
-
-            double scale = Math.Min(widthRatio, heightRatio); // 더 작은 쪽 기준으로 맞추기
-
-            // 실제 적용할 너비/높이 계산
-            MainImage.Width = imageWidth * scale;
-            MainImage.Height = imageHeight * scale;
+            // OCRResultDataGrid.Items.Add(new OcrResult{Text = text});
+            ocrResults.Add(new OcrResult{Id = ocrResults.Count+1, Text = text});
+            OCRResultDataGrid.ScrollIntoView(ocrResults.Last());
         }
 
         private void LoadImage_Click(object sender, RoutedEventArgs e)
@@ -162,7 +143,7 @@ namespace Textract
                 ImageListBox.ItemsSource = items;
 
                 MainImage.Source = new BitmapImage(new Uri(items[0].Path));
-                FitImageToScrollViewer();
+                _imageViewerService.FitImageToScrollViewer();
 
                 // 선택 영역 초기화
                 _selectionService.Reset();
@@ -172,7 +153,7 @@ namespace Textract
             }
         }
 
-        private void LoadImage_Executed(object sender, ExecutedRoutedEventArgs e)
+        private void LoadImageExecuted(object sender, ExecutedRoutedEventArgs e)
         {
             LoadImage_Click(sender, e); // 기존 이미지 불러오기 재사용
         }
@@ -202,15 +183,7 @@ namespace Textract
         {
             if (ImageListBox.SelectedItem is ImageItem item)
             {
-                var image = new BitmapImage(new Uri(item.Path));
-                MainImage.Source = image;
-                FitImageToScrollViewer();
-
-                // 선택 영역 초기화
-                _selectionService.Reset();
-
-                // Zoom 초기화
-                _zoomService.ResetZoom();
+                _imageViewerService.Load(item);
             }
         }
 
@@ -229,7 +202,7 @@ namespace Textract
 
             if (clicked.Tag is string lang)
             {
-                ocrService.ChangeLanguage(lang);
+                _ocrService.ChangeLanguage(lang);
             }
         }
 
@@ -260,6 +233,11 @@ namespace Textract
                 Clipboard.SetText(selected.Text);
                 MessageBox.Show("텍스트가 복사되었습니다.");
             }
+        }
+
+        private void ClearLogMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            ocrResults.Clear();
         }
     }
 }

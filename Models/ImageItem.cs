@@ -9,7 +9,7 @@ using System.Windows.Media.Imaging;
 
 namespace Textract.Models
 {
-    internal class ImageItem:INotifyPropertyChanged
+    public class ImageItem:INotifyPropertyChanged
     {
         public string Path { get; set; }
         public string Name { get; set; }

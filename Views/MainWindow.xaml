@@ -15,7 +15,7 @@
     </Window.InputBindings>
     <Window.CommandBindings>
         <CommandBinding Command="{x:Static local:MainWindow.LoadImageCommand}"
-                        Executed="LoadImage_Executed"/>
+                        Executed="LoadImageExecuted"/>
     </Window.CommandBindings>
 
     <!-- UI -->
@@ -111,27 +111,26 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*"/>
                         <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <!--<TextBox Grid.Row="0"
-                             HorizontalScrollBarVisibility="Auto"
-                             VerticalScrollBarVisibility="Auto"
-                             x:Name="OcrResultTxtBox"/>-->
                     <DataGrid Grid.Row="0"
                               x:Name="OCRResultDataGrid"
+                              Margin="0,0,0,10"
                               SelectionMode="Single"
                               IsReadOnly="True"
-                              MouseDoubleClick="OCRResultDataGrid_MouseDoubleClick">
+                              AutoGenerateColumns="False"
+                              MouseDoubleClick="OCRResultDataGrid_MouseDoubleClick" >
                         <DataGrid.Columns>
+                            <DataGridTextColumn Header="No" Width="Auto" Binding="{Binding Id}"/>
                             <DataGridTextColumn Header="OCRResult" Width="*" Binding="{Binding Text}"/>
                         </DataGrid.Columns>
+                        <DataGrid.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="결과 초기화"
+                                          x:Name="ClearLogMenuItem" Click="ClearLogMenuItem_Click"/>
+                            </ContextMenu>
+                        </DataGrid.ContextMenu>
                     </DataGrid>
-                    <ProgressBar Grid.Row="1"
-                                 x:Name="OcrProgressBar"
-                                 Height="15"
-                                 Margin="0,5"
-                                 HorizontalAlignment="Stretch"/>
                     <Button Grid.Row="2"
                             Height="40"
                             Content="OCR 실행" Click="RunOcr_Click" HorizontalAlignment="Stretch" VerticalAlignment="Bottom"/>
