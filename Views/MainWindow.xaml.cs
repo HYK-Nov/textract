@@ -1,6 +1,7 @@
 ﻿using Microsoft.Win32;
 using OpenCvSharp;
 using OpenCvSharp.WpfExtensions;
+using System.Collections.ObjectModel;
 using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.Drawing;
@@ -35,7 +36,7 @@ namespace Textract
         private SelectionService _selectionService;
         private readonly OcrService ocrService = new OcrService(@"./tessdata");
 
-    public static RoutedUICommand LoadImageCommand = new RoutedUICommand(
+        public static RoutedUICommand LoadImageCommand = new RoutedUICommand(
             "Load Image", "LoadImage", typeof(MainWindow));
 
         public MainWindow()
@@ -112,9 +113,7 @@ namespace Textract
             
             string text = ocrService.OCRProcess(cropped);
 
-            OcrResultTxtBox.AppendText(text + "\r\n" + "-----------------------------" + "\r\n");
-
-            OcrResultTxtBox.ScrollToEnd();
+            OCRResultDataGrid.Items.Add(new OcrResult{Text = text});
 
             OcrProgressBar.IsIndeterminate = false;
         }
@@ -162,7 +161,7 @@ namespace Textract
 
                 ImageListBox.ItemsSource = items;
 
-                MainImage.Source = items[0].Thumbnail;
+                MainImage.Source = new BitmapImage(new Uri(items[0].Path));
                 FitImageToScrollViewer();
 
                 // 선택 영역 초기화
@@ -215,6 +214,25 @@ namespace Textract
             }
         }
 
+        private void LanguageMenuItem_Checked(object sender, RoutedEventArgs e)
+        {
+            var clicked = (MenuItem)sender;
+            var parent = (MenuItem)clicked.Parent;
+
+            foreach (object obj in parent.Items)
+            {
+                if (obj is MenuItem mi && mi != clicked)
+                {
+                    mi.IsChecked = false;
+                }
+            }
+
+            if (clicked.Tag is string lang)
+            {
+                ocrService.ChangeLanguage(lang);
+            }
+        }
+
         private void OverlayCanvas_MouseWheel(object sender, MouseWheelEventArgs e)
         {
             if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
@@ -235,22 +253,12 @@ namespace Textract
             System.Windows.Application.Current.Shutdown();
         }
 
-        private void LanguageMenuItem_Checked(object sender, RoutedEventArgs e)
+        private void OCRResultDataGrid_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            var clicked = (MenuItem)sender;
-            var parent = (MenuItem)clicked.Parent;
-
-            foreach (object obj in parent.Items)
+            if (OCRResultDataGrid.SelectedItem is OcrResult selected)
             {
-                if (obj is MenuItem mi && mi != clicked)
-                {
-                    mi.IsChecked = false;
-                }
-            }
-
-            if (clicked.Tag is string lang)
-            {
-                ocrService.ChangeLanguage(lang);
+                Clipboard.SetText(selected.Text);
+                MessageBox.Show("텍스트가 복사되었습니다.");
             }
         }
     }
