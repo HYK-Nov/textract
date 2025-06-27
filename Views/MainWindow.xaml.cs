@@ -115,7 +115,6 @@ namespace Textract
             // OCR
             string text = _ocrService.OCRProcess(cropped);
 
-            // OCRResultDataGrid.Items.Add(new OcrResult{Text = text});
             ocrResults.Add(new OcrResult{Id = ocrResults.Count+1, Text = text});
             OCRResultDataGrid.ScrollIntoView(ocrResults.Last());
         }
